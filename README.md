@@ -1,5 +1,7 @@
 # ToDo App Serverless Project
 
+The github link to this project is: https://github.com/rpuggian/cloud-developer-todo-app
+
 This project demonstrates the setup of application components as 
 a serverless application running on a Cloud Infrastructure
 
