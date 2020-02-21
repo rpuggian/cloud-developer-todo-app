@@ -30,3 +30,12 @@ sls deploy -v --aws-profile serverless --aws-region us-east-2
 :warning: Note that NODE_OPTIONS is required for the _individually_ packaging option in *serverless.yml* to avoid Out Of Memory issues 
 
 ## Screenshots
+![login](https://github.com/rpuggian/cloud-developer-todo-app/blob/master/screenshots/login.png)
+
+![home](https://github.com/rpuggian/cloud-developer-todo-app/blob/master/screenshots/home.png)
+
+![image](https://github.com/rpuggian/cloud-developer-todo-app/blob/master/screenshots/image_upload.png)
+
+![tasks](https://github.com/rpuggian/cloud-developer-todo-app/blob/master/screenshots/tasks.png)
+
+
