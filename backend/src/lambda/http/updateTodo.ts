@@ -21,7 +21,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
     const currentTodo = getTodo.Item;
 
     // ..determine the bucket image location
-    const attachmentUrl= `https://${FILE_UPLOAD_S3_BUCKET}.s3.eu-west-2.amazonaws.com/${todoId}`
+    const attachmentUrl= `https://${FILE_UPLOAD_S3_BUCKET}.s3.us-east-2.amazonaws.com/${todoId}`
 
     // ...then PATCH it with the supplied details
     const newTodo = { ...currentTodo, ...updatedTodo, attachmentUrl };
