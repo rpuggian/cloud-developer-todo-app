@@ -15,4 +15,3 @@ export interface Key {
     x5t: string;
     x5c: string[];
 }
-

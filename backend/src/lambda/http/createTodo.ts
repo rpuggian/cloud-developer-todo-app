@@ -1,60 +1,40 @@
 import 'source-map-support/register'
-import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda'
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import { CreateTodoRequest } from '../../requests/CreateTodoRequest'
-import { v4 as uuid } from 'uuid';
 import { createLogger } from '../../utils/logger'
-const logger = createLogger('http')
-import { DynamoDB } from 'aws-sdk';
 import { getUserIdFromJwt } from '../../auth/utils';
-import { TodoItem } from '../../models/TodoItem';
-const docClient = new DynamoDB.DocumentClient();
-const TODO_TABLE = process.env.TODO_TABLE
+import { TodoRepository } from '../../repository/todoRepository';
+import { TodoAccess } from '../../infra/TodoAccess';
+import * as middy from 'middy';
+import { cors } from 'middy/middlewares';
 
+const logger = createLogger('createTodo')
+const repository = new TodoRepository(new TodoAccess());
 
-/**
- * Creates a new TODO item
- * @param event 
- */
-export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-
+const createHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
-    const { name, dueDate }: CreateTodoRequest = JSON.parse(event.body)
+    const request = JSON.parse(event.body) as CreateTodoRequest
     const userId = getUserIdFromJwt(event);
-    const newTodo: TodoItem = {
-      todoId: uuid(),
-      userId,
-      createdAt: JSON.stringify(new Date()),
-      name,
-      dueDate,
-      done: false
-    }
-
-    const params = {
-      TableName: TODO_TABLE,
-      Item: newTodo
-    };
-
-    await docClient.put(params).promise();
-
-    // Return SUCCESS
-    logger.info('Created TODO', { newTodo });
+    var newItem = await repository.createTodo(request, userId)
+    logger.info("New todo item created", {item: newItem })
     return {
       statusCode: 201,
-      headers: {
-        'Access-Control-Allow-Origin': '*'
-      },
-      body: JSON.stringify({ item: newTodo })
+      body: JSON.stringify({ item: newItem })
     }
   }
   catch (e) {
-    // Return FAIL
     logger.error('Unable to create TODO', { e });
     return {
       statusCode: 500,
-      headers: {
-        'Access-Control-Allow-Origin': '*'
-      },
       body: e.message
     }
   }
-}
+};
+
+export const handler =
+  middy(createHandler)
+    .use(
+      cors({
+        credentials: true
+      })
+    );

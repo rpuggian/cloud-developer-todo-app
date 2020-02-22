@@ -9,8 +9,7 @@ import { Jwks, Key } from '../../auth/Jwks'
 import { JwtPayload } from '../../auth/JwtPayload'
 
 const logger = createLogger('auth')
-
-const jwksUrl = 'https://dev-h22b0uti.eu.auth0.com/.well-known/jwks.json'
+const jwksUrl = 'https://dev-lmm-br.auth0.com/.well-known/jwks.json'
 
 export const handler = async (
   event: CustomAuthorizerEvent
@@ -18,7 +17,7 @@ export const handler = async (
   logger.info('Authorizing a user', event.authorizationToken)
   try {
     const jwtToken = await verifyToken(event.authorizationToken)
-    logger.info('User was authorized', {jwtToken})
+    logger.info('User was authorized', jwtToken)
 
     return {
       principalId: jwtToken.sub,
@@ -62,10 +61,6 @@ const certToPEM = (cert: string): Secret => {
   return cert;
 }
 
-/**
- * Asymetric JWT verifier based on steps from https://auth0.com/blog/navigating-rs256-and-jwks/
- * @param authHeader 
- */
 async function verifyToken(authHeader: string): Promise<JwtPayload> {
   try {
     // Retrieve the JWKS and filter for potential signing keys

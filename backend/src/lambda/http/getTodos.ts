@@ -1,56 +1,36 @@
 import 'source-map-support/register'
-
-import { APIGatewayProxyEvent, APIGatewayProxyResult, APIGatewayProxyHandler } from 'aws-lambda'
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import { getUserIdFromJwt } from '../../auth/utils'
 import { createLogger } from '../../utils/logger'
-const logger = createLogger('http')
-import { DynamoDB } from 'aws-sdk';
-const docClient = new DynamoDB.DocumentClient();
+import { TodoRepository } from '../../repository/todoRepository';
+import { TodoAccess } from '../../infra/TodoAccess';
+import * as middy from 'middy';
+import { cors } from 'middy/middlewares';
 
-const TODO_TABLE = process.env.TODO_TABLE
-const INDEX_NAME = process.env.INDEX_NAME
+const logger = createLogger('getTodos')
+const repository = new TodoRepository(new TodoAccess());
 
-/**
- * Returns TODO items, filtered for the current user
- * @param event 
- */
-export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-
+const getAllTodosHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
-
-    logger.info('Getting TODOs')
     const userId = getUserIdFromJwt(event);
-
-    // Filter for current user and use an INDEX for improved performance
-    const params = {
-      TableName: TODO_TABLE,
-      IndexName: INDEX_NAME,
-      FilterExpression: 'userId=:u',
-      ExpressionAttributeValues: { ':u': userId }
-    };
-
-    logger.info(`scanning for user ${userId}`);
-    const result = await docClient.scan(params).promise();
-
-    // SUCCESS
-    logger.info('✅ Scanned TODO');
+    const result = await repository.getTodosByUserId(userId)
     return {
       statusCode: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*'
-      },
-      body: JSON.stringify({ items: result.Items })
+      body: JSON.stringify({ items: result })
     }
   }
   catch (e) {
-    // FAIL
-    logger.error('❌ Unable to scan TODO', { e });
+    logger.error('Unable to scan TODO', { e });
     return {
       statusCode: 500,
-      headers: {
-        'Access-Control-Allow-Origin': '*'
-      },
       body: e.message
     }
   }
-}
+};
+
+export const handler = middy(getAllTodosHandler)
+  .use(
+    cors({
+      credentials: true
+    })
+  );
